@@ -14,7 +14,31 @@
       <div style="clear: both;"></div>
       <div id="graph"></div>
     </div>
-    <div id="table"></div>
+    <script>
+    if (!library)
+      var library = {};
+
+    library.json = {
+      replacer: function(match, pIndent, pKey, pVal, pEnd) {
+        var key = '<span class=json-key>';
+        var val = '<span class=json-value>';
+        var str = '<span class=json-string>';
+        var r = pIndent || '';
+        if (pKey)
+           r = r + key + pKey.replace(/[": ]/g, '') + '</span>: ';
+        if (pVal)
+           r = r + (pVal[0] == '"' ? str : val) + pVal + '</span>';
+        return r + (pEnd || '');
+      },
+    prettyPrint: function(obj) {
+      var jsonLine = /^( *)("[\w]+": )?("[^"]*"|[\w.+-]*)?([,[{])?$/mg;
+      return JSON.stringify(obj, null, 3)
+         .replace(/&/g, '&amp;').replace(/\\"/g, '&quot;')
+         .replace(/</g, '&lt;').replace(/>/g, '&gt;')
+         .replace(jsonLine, library.json.replacer);
+      }
+    };
+    </script>
     <script>
       MP.api.ready(function() {
         var eventSelect = $('#eventSelect').MPEventSelect();
@@ -34,20 +58,14 @@
           if (eventName) {
             MP.api.segment(eventName, propName, dateRange).done(function(results) {
               eventGraph.MPChart('setData', results);
-              eventTable.MPTable('setData', results);
               //debugger;
               console.log(results.values()[eventName])
               
-              var rawData = results.values()[eventName]
-              //debugger;
-              var resultString = '';
-             for (x in rawData)
-                {
-                  resultString += x + ": " + rawData[x] + "<br />";
-
-                }
+              var rawData = results.values()
+              debugger;
+              
               //$('#one').text(resultString);  
-              document.getElementById("one").innerHTML = resultString;  
+              document.getElementById("one").innerHTML = library.json.prettyPrint(rawData);  
   
             });
           }
@@ -64,7 +82,7 @@
       
     </script>
     <br/><br/>
-    <span id="one">I am the results</span>
+    <pre id="one">I am the results</pre>
     
   </body>
 </html>
